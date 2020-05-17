@@ -1,0 +1,41 @@
+﻿using System.Collections.Generic;
+using System.Net;
+
+namespace ETModel
+{
+	public class NetInnerComponent: NetworkComponent
+	{
+		public readonly Dictionary<IPEndPoint, Session> adressSessions = new Dictionary<IPEndPoint, Session>();
+
+		public override void Remove(long id)
+		{
+			Session session = this.Get(id);
+			if (session == null)
+			{
+				return;
+			}
+			this.adressSessions.Remove(session.RemoteAddress);
+
+			base.Remove(id);
+		}
+
+		/// <summary>
+		/// 从地址缓存中取Session,如果没有则创建一个新的Session,并且进行连接,然后保存到地址缓存中
+		/// </summary>
+		public Session Get(IPEndPoint ipEndPoint)
+		{
+			
+			if (this.adressSessions.TryGetValue(ipEndPoint, out Session session))
+			{
+				Log.Info($"存在:{ipEndPoint.ToString()}");
+				return session;
+			}
+			Log.Info($"不存在:{ipEndPoint.ToString()}");
+			//创建一个会话实体 并且连接到服务器ipEndPoint
+			session = this.Create(ipEndPoint);
+
+			this.adressSessions.Add(ipEndPoint, session);
+			return session;
+		}
+	}
+}
